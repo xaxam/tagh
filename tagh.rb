@@ -16,19 +16,28 @@ class Tagger
 
 	def list(source, options)
 
+		scanned = []
 		tags = []
+		tagsn = []
+
 		source = '/Users/sx/Dropbox/Notes/'
 		dir = source + '*.{txt,md,mmd,markdown,taskpaper}'
 
+		# Scan for hashtags in the text of all files
 		Dir.glob(dir) do |p|
-
-			# Scan for hashtags in the text of all files
 				f = File.open(p)
-				tags << f.read.scan(/( #[\w\d-]+)(?=\s|$)/i)	
-			
+				scanned << f.read.scan(/( #[\w\d-]+)(?=\s|$)/i)				
 		end		
 
-		tags = tags.delete_if(&:empty?).flatten.map(&:lstrip).sort.uniq
+
+		# iterate over the array, counting duplicate entries
+		thash = Hash.new(0)
+		scanned.flatten.map(&:lstrip).sort.each { |v| thash[v] += 1 }
+
+		thash.each do |k, v|
+		  tagsn << "#{k} (#{v})"
+		  tags << k
+		end
 
 
 		if options[:sublime]
@@ -44,7 +53,7 @@ class Tagger
 			puts "List of tags writen to: " + options[:file]
 		else
 			#standard output
-			tags
+			tagsn
 		end
 
 
