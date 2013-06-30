@@ -20,7 +20,6 @@ class Tagger
 		tags = []
 		tagsn = []
 
-		source = '/Users/sx/Dropbox/Notes/'
 		dir = source + '*.{txt,md,mmd,markdown,taskpaper}'
 
 		# Scan for hashtags in the text of all files
@@ -30,7 +29,7 @@ class Tagger
 		end		
 
 
-		# iterate over the array, counting duplicate entries
+		# iterate over the array, counting duplicate entries and hash the result
 		thash = Hash.new(0)
 		scanned.flatten.map(&:lstrip).sort.each { |v| thash[v] += 1 }
 
@@ -55,8 +54,33 @@ class Tagger
 			#standard output
 			tagsn
 		end
+	end
 
+	def find(source, options)
 
+		scanned = []
+
+		dir = source + '*.{txt,md,mmd,markdown,taskpaper}'
+
+		# Scan for hashtags in the text of all files
+		Dir.glob(dir) do |p|
+				f = File.open(p)
+				
+				chunks = f.read.split(/\n\n[\-_\* ]{3,}\n|\n\n(?=#+.+\n)/)
+				chunks.each do |chunk|
+					if chunk  =~ / ##{options[:tag]}[\s$]/ 
+						scanned << chunk + "\n\n[" + File.basename(p,File.extname(p))+ "](file://" + URI.escape(p) + ")"
+					end
+				end
+		end
+		
+		if options[:file]
+			File.open(options[:file], 'w') { |file| file.puts scanned.join("\n\n---\n\n")}
+			puts "Result in file: " + options[:file]
+		else
+			#standard output
+			scanned.join("\n\n---\n\n")
+		end 
 	end
 
 end
@@ -69,6 +93,14 @@ class Tagh < Thor
 	def list(source)
 		r = Tagger.new
    		puts r.list(source, options)	
+	end
+
+	desc "find -t tag source", "find snippets tagged tag in 'source' (directory)"
+	option :tag, :aliases => "-t"
+	option :file, :aliases => "-f"
+	def find(source)
+		r = Tagger.new
+   		puts r.find(source, options)	
 	end
 end
 
