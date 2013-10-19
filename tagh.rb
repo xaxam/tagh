@@ -71,7 +71,7 @@ class Tagger
 		end
 	end
 
-	def find(options)
+	def find(tag, options)
 
 		if options[:source]
 			source = options[:source]
@@ -92,7 +92,7 @@ class Tagger
 				# Hashtags
 				chunks = f.read.split(/\n\n[\-_\* ]{3,}\n|\n\n(?=#+.+\n)/)
 				chunks.each do |chunk|
-					if chunk  =~ / ##{options[:tag]}[\s$]/ 
+					if chunk  =~ / ##{tag}[\s$]/ 
 						scanned << chunk + "\n\n[" + File.basename(p,File.extname(p))+ "](file://" + URI.escape(p) + ")"
 						found << ("'" + p + "'")
 					end
@@ -100,7 +100,7 @@ class Tagger
 
 				#YAML meta data tags
 				yaml = YAML.load_file(p)
-				if yaml['tags'].include? options[:tag]
+				if yaml['tags'].include? tag
 					scanned << f.read
 					found << ("'" + p + "'")
 				end
@@ -133,14 +133,13 @@ class Tagh < Thor
    		puts r.list(options)	
 	end
 
-	desc "find -t tag [-s source]", "find snippets tagged tag in [source]"
+	desc "find TAG [-s source]", "find items tagged TAG in [source]"
 	option :source, :aliases => "-s"
-	option :tag, :aliases => "-t"
 	option :file, :aliases => "-f"
 	option :open, :aliases => "-o"
-	def find()
+	def find(tag)
 		r = Tagger.new
-   		puts r.find(options)	
+   		puts r.find(tag, options)	
 	end
 end
 
