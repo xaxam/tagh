@@ -154,11 +154,32 @@ class Tagger
 			# Scan for tags in the text of all files
 			Dir.glob(dir) do |p|
 				f = File.open(p)
+				doc = f.read
 				
-				merge.each do |m|
-					
-					puts m
+				# YAML (with dirty check for YAML metadata header)
+				if doc[0..3] == "---\n"
+
+					contents = doc.split('---')[2].lstrip
+					meta = YAML.load(doc)
+
+					merge.each do |t|
+						if meta['tags'].include?(t)
+							meta['tags'].delete(t)
+							meta['tags'] << target
+						end
+					end	
+
+					meta['tags'].uniq!
+
+					# new markdow file
+					doc = YAML.dump(meta) + "---\n" + contents
+
 				end
+
+				# Hashtags
+				tags.each { |t| doc.gsub!("##{t}", "##{target}")}
+
+				File.open(p, 'w') { |file| file.write(doc) }
 
 			end
 
