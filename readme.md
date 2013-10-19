@@ -1,3 +1,5 @@
+# Attention: tagh.rb is hardlinked to /usr/local/bin/tagh 
+
 tagh is a commandline tool (based on thor) to handle tags in plain text files. There are three formats that need to be taken into accout: #hashtags, system tags (OpenMeta, Maverick), tags in YAML headers. tagh handles and converts all three formats.
 
 ## Commands

@@ -87,7 +87,8 @@ end
 
 
 class Tagh < Thor
-	desc "list source", "list all tags in 'source' (directory)"
+	desc "list [source]", "list all tags in [source]."
+	option :source
 	option :sublime, :aliases => "-s"
 	option :file, :aliases => "-f"
 	def list(source)
