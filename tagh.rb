@@ -23,6 +23,11 @@ class Tagger
 			source = Dir.pwd
 		end
 
+		options['min'] ? min = options['min'].to_i : min = 1
+		options['max'] ? max = options['max'].to_i : max = 999999
+
+		puts min
+
 		puts "Listing tags in: " + source
 		
 		scanned = []
@@ -50,8 +55,10 @@ class Tagger
 		scanned.flatten.map(&:lstrip).sort.each { |v| thash[v] += 1 }
 
 		thash.each do |k, v|
-		  tagsn << "#{k} (#{v})"
-		  tags << k
+			if v.between?(min,max) 
+				tagsn << "#{k} (#{v})"
+			 	tags << k
+			end
 		end
 
 
@@ -70,6 +77,9 @@ class Tagger
 			tagsn
 		end
 	end
+
+
+
 
 	def find(tag, options)
 
@@ -120,6 +130,22 @@ class Tagger
 
 	end
 
+
+	def merge(tags, options)
+
+		if options[:source]
+			source = options[:source]
+		else
+			source = Dir.pwd
+		end
+
+		puts "Merging tags #{tags[0..-2].join(', ')} into #{tags[-1]} in: " + source
+
+
+
+	end
+
+
 end
 
 
@@ -128,6 +154,8 @@ class Tagh < Thor
 	option :sourcel, :aliases => "-s"
 	option :sublime, :aliases => "-u"
 	option :file, :aliases => "-f"
+	option :min
+	option :max
 	def list()
 		r = Tagger.new
    		puts r.list(options)	
@@ -140,6 +168,13 @@ class Tagh < Thor
 	def find(tag)
 		r = Tagger.new
    		puts r.find(tag, options)	
+	end
+
+	desc "merge TAGS", "merge all TAGS into the last one specified"
+	option :source, :aliases => "-s"
+	def merge(*tags)
+		r = Tagger.new
+   		puts r.merge(tags, options)
 	end
 end
 
