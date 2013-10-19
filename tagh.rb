@@ -18,34 +18,38 @@ class Tagger
 	def list(options)
 
 		if options[:source]
-			source = options[:source]
+			sources = options[:source]
 		else
-			source = Dir.pwd
+			sources = [Dir.pwd]
 		end
 
 		options['min'] ? min = options['min'].to_i : min = 1
 		options['max'] ? max = options['max'].to_i : max = 999999
 
-		puts "Listing tags in: " + source
+		puts "Listing tags in: " + sources.join(', ')
 		
 		scanned = []
 		tags = []
 		tagsn = []
 
-		dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
+		sources.each do |source|
 
-		# Scan for tags in the text of all files
-		Dir.glob(dir) do |p|
-				f = File.open(p)
+			dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
 
-				# Hashtags
-				scanned << f.read.scan(/( #[\w\d-]+)(?=\s|$)/i)
+			# Scan for tags in the text of all files
+			Dir.glob(dir) do |p|
+					f = File.open(p)
 
-				# YAML meta data tags
-				yaml = YAML.load_file(p)
-				scanned << yaml['tags'] unless yaml['tags'] == nil
+					# Hashtags
+					scanned << f.read.scan(/( #[\w\d-]+)(?=\s|$)/i)
 
-		end		
+					# YAML meta data tags
+					yaml = YAML.load_file(p)
+					scanned << yaml['tags'] unless yaml['tags'] == nil
+
+			end		
+
+		end
 
 
 		# iterate over the array, counting duplicate entries and hash the result
@@ -71,6 +75,8 @@ class Tagger
 		if options[:file]
 			File.open(options[:file], 'w') { |file| file.puts tags}
 			puts "List of tags writen to: " + options[:file]
+		elsif options[:flat]
+			"'" + tags.join("' '") + "'"
 		else
 			tagsn
 		end
@@ -82,19 +88,22 @@ class Tagger
 	def find(tag, options)
 
 		if options[:source]
-			source = options[:source]
+			sources = options[:source]
 		else
-			source = Dir.pwd
+			sources = [Dir.pwd]
 		end
 
-		puts "Searching in: " + source
+		puts "Searching in: " + sources.join(', ')
 
 		scanned = []
 		found = []
-		dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
 
-		# Scan for tags in the text of all files
-		Dir.glob(dir) do |p|
+		sources.each do |source|
+
+			dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
+
+			# Scan for tags in the text of all files
+			Dir.glob(dir) do |p|
 				f = File.open(p)
 				
 				# Hashtags
@@ -114,6 +123,7 @@ class Tagger
 						found << ("'" + p + "'")
 					end
 				end
+			end
 		end
 
 		if options[:open]
@@ -134,9 +144,9 @@ class Tagger
 	def merge(tags, options)
 
 		if options[:source]
-			source = options[:source]
+			sources = options[:source]
 		else
-			source = Dir.pwd
+			sources = [Dir.pwd]
 		end
 
 		stdin, stdout, stderr = Open3.popen3("git status -s")
@@ -145,42 +155,46 @@ class Tagger
 		if r == '' 
 			merge = tags[0..-2]
 			target = tags[-1]
-			puts "Merging tags #{merge.join(', ')} into #{target} in: " + source
+			puts "Merging tags #{merge.join(', ')} into #{target} in: " + sources.join(', ')
 
 			scanned = []
 			found = []
-			dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
 
-			# Scan for tags in the text of all files
-			Dir.glob(dir) do |p|
-				f = File.open(p)
-				doc = f.read
-				
-				# YAML (with dirty check for YAML metadata header)
-				if doc[0..3] == "---\n"
+			sources.each do |source|
 
-					contents = doc.split('---')[2].lstrip
-					meta = YAML.load(doc)
+				dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
 
-					merge.each do |t|
-						if meta['tags'].include?(t)
-							meta['tags'].delete(t)
-							meta['tags'] << target
-						end
-					end	
+				# Scan for tags in the text of all files
+				Dir.glob(dir) do |p|
+					f = File.open(p)
+					doc = f.read
+					
+					# YAML (with dirty check for YAML metadata header)
+					if doc[0..3] == "---\n"
 
-					meta['tags'].uniq!
+						contents = doc.split('---')[2].lstrip
+						meta = YAML.load(doc)
 
-					# new markdow file
-					doc = YAML.dump(meta) + "---\n" + contents
+						merge.each do |t|
+							if meta['tags'].include?(t)
+								meta['tags'].delete(t)
+								meta['tags'] << target
+							end
+						end	
+
+						meta['tags'].uniq!
+
+						# new markdow file
+						doc = YAML.dump(meta) + "---\n" + contents
+
+					end
+
+					# Hashtags
+					tags.each { |t| doc.gsub!("##{t}", "##{target}")}
+
+					File.open(p, 'w') { |file| file.write(doc) }
 
 				end
-
-				# Hashtags
-				tags.each { |t| doc.gsub!("##{t}", "##{target}")}
-
-				File.open(p, 'w') { |file| file.write(doc) }
-
 			end
 
 		else
@@ -192,48 +206,52 @@ class Tagger
 	def delete(tags, options)
 
 		if options[:source]
-			source = options[:source]
+			sources = options[:source]
 		else
-			source = Dir.pwd
+			sources = [Dir.pwd]
 		end
 
 		stdin, stdout, stderr = Open3.popen3("git status -s")
 		r = stdout.read
 
 		if r == '' 
-			puts "Deleting tags #{tags.join(', ')} in: " + source
+			puts "Deleting tags #{tags.join(', ')} in: " + sources.join(', ')
 
 			scanned = []
 			found = []
-			dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
 
-			# Scan for tags in the text of all files 
-			Dir.glob(dir) do |p|
-				f = File.open(p)
-				doc = f.read
-				
-				# YAML (with dirty check for YAML metadata header)
-				if doc[0..3] == "---\n"
+			sources.each do |source|
 
-					contents = doc.split('---')[2].lstrip
-					meta = YAML.load(doc)
+				dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
 
-					tags.each do |t|
-						meta['tags'].delete(t)
+				# Scan for tags in the text of all files 
+				Dir.glob(dir) do |p|
+					f = File.open(p)
+					doc = f.read
+					
+					# YAML (with dirty check for YAML metadata header)
+					if doc[0..3] == "---\n"
+
+						contents = doc.split('---')[2].lstrip
+						meta = YAML.load(doc)
+
+						tags.each do |t|
+							meta['tags'].delete(t)
+						end
+
+						# strip potential double values
+						meta['tags'].uniq!
+
+						# new markdow file
+						doc = YAML.dump(meta) + "---\n" + contents
+
 					end
 
-					# strip potential double values
-					meta['tags'].uniq!
+					# Hashtags
+					tags.each { |t| doc.gsub!("##{t}", '')}
 
-					# new markdow file
-					doc = YAML.dump(meta) + "---\n" + contents
-
+					File.open(p, 'w') { |file| file.write(doc) }
 				end
-
-				# Hashtags
-				tags.each { |t| doc.gsub!("##{t}", '')}
-
-				File.open(p, 'w') { |file| file.write(doc) }
 			end
 
 		else
@@ -247,18 +265,19 @@ end
 
 class Tagh < Thor
 	desc "list [arguments]", "List tags."
-	option :source, :aliases => "-s"
+	option :source, :type => :array, :aliases => "-s"
 	option :sublime, :aliases => "-u"
 	option :file, :aliases => "-f"
 	option :min
 	option :max
+	option :flat
 	def list()
 		r = Tagger.new
    		puts r.list(options)	
 	end
 
 	desc "find TAG [arguments]", "Find items tagged TAG in [source]"
-	option :source, :aliases => "-s"
+	option :source, :type => :array, :aliases => "-s"
 	option :file, :aliases => "-f"
 	option :open, :aliases => "-o"
 	def find(tag)
@@ -267,14 +286,14 @@ class Tagh < Thor
 	end
 
 	desc "merge TAGS [arguments]", "Merge all TAGS into the last one specified."
-	option :source, :aliases => "-s"
+	option :source, :type => :array, :aliases => "-s"
 	def merge(*tags)
 		r = Tagger.new
    		puts r.merge(tags, options)
 	end
 
 	desc "delete TAGS [arguments]", "Delete TAGS."
-	option :source, :aliases => "-s"
+	option :source, :type => :array, :aliases => "-s"
 	def delete(*tags)
 		r = Tagger.new
    		puts r.delete(tags, options)
