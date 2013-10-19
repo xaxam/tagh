@@ -5,6 +5,7 @@ require 'open-uri'
 require 'rubygems'
 require 'terminal-notifier'
 require 'thor'
+require 'yaml'
 
 if RUBY_VERSION =~ /1.9/
   Encoding.default_external = Encoding::UTF_8
@@ -30,10 +31,17 @@ class Tagger
 
 		dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
 
-		# Scan for hashtags in the text of all files
+		# Scan for tags in the text of all files
 		Dir.glob(dir) do |p|
 				f = File.open(p)
-				scanned << f.read.scan(/( #[\w\d-]+)(?=\s|$)/i)				
+
+				# Hashtags
+				scanned << f.read.scan(/( #[\w\d-]+)(?=\s|$)/i)	
+
+				#YAML meta data tags
+				yaml = YAML.load_file(p)
+				scanned << yaml['tags'] unless yaml['tags'] == nil
+
 		end		
 
 
@@ -59,7 +67,6 @@ class Tagger
 			File.open(options[:file], 'w') { |file| file.puts tags}
 			puts "List of tags writen to: " + options[:file]
 		else
-			#standard output
 			tagsn
 		end
 	end
@@ -78,16 +85,24 @@ class Tagger
 		found = []
 		dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
 
-		# Scan for hashtags in the text of all files
+		# Scan for tags in the text of all files
 		Dir.glob(dir) do |p|
 				f = File.open(p)
 				
+				# Hashtags
 				chunks = f.read.split(/\n\n[\-_\* ]{3,}\n|\n\n(?=#+.+\n)/)
 				chunks.each do |chunk|
 					if chunk  =~ / ##{options[:tag]}[\s$]/ 
 						scanned << chunk + "\n\n[" + File.basename(p,File.extname(p))+ "](file://" + URI.escape(p) + ")"
 						found << ("'" + p + "'")
 					end
+				end
+
+				#YAML meta data tags
+				yaml = YAML.load_file(p)
+				if yaml['tags'].include? options[:tag]
+					scanned << f.read
+					found << ("'" + p + "'")
 				end
 		end
 
