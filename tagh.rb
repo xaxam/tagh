@@ -26,8 +26,6 @@ class Tagger
 		options['min'] ? min = options['min'].to_i : min = 1
 		options['max'] ? max = options['max'].to_i : max = 999999
 
-		puts min
-
 		puts "Listing tags in: " + source
 		
 		scanned = []
@@ -41,9 +39,9 @@ class Tagger
 				f = File.open(p)
 
 				# Hashtags
-				scanned << f.read.scan(/( #[\w\d-]+)(?=\s|$)/i)	
+				scanned << f.read.scan(/( #[\w\d-]+)(?=\s|$)/i)
 
-				#YAML meta data tags
+				# YAML meta data tags
 				yaml = YAML.load_file(p)
 				scanned << yaml['tags'] unless yaml['tags'] == nil
 
@@ -52,7 +50,7 @@ class Tagger
 
 		# iterate over the array, counting duplicate entries and hash the result
 		thash = Hash.new(0)
-		scanned.flatten.map(&:lstrip).sort.each { |v| thash[v] += 1 }
+		scanned.flatten.map(&:lstrip).map { |t| t.sub('#','')}.sort.each { |v| thash[v] += 1 }
 
 		thash.each do |k, v|
 			if v.between?(min,max) 
@@ -108,11 +106,13 @@ class Tagger
 					end
 				end
 
-				#YAML meta data tags
+				# YAML meta data tags
 				yaml = YAML.load_file(p)
-				if yaml['tags'].include? tag
-					scanned << f.read
-					found << ("'" + p + "'")
+				if yaml['tags']
+					if yaml['tags'].include? tag
+						scanned << f.read
+						found << ("'" + p + "'")
+					end
 				end
 		end
 
@@ -139,19 +139,94 @@ class Tagger
 			source = Dir.pwd
 		end
 
-		puts "Merging tags #{tags[0..-2].join(', ')} into #{tags[-1]} in: " + source
+		stdin, stdout, stderr = Open3.popen3("git status -s")
+		r = stdout.read
 
+		if r == '' 
+			merge = tags[0..-2]
+			target = tags[-1]
+			puts "Merging tags #{merge.join(', ')} into #{target} in: " + source
 
+			scanned = []
+			found = []
+			dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
+
+			# Scan for tags in the text of all files
+			Dir.glob(dir) do |p|
+				f = File.open(p)
+				
+				merge.each do |m|
+					
+					puts m
+				end
+
+			end
+
+		else
+			puts "No clean git repository! Setup git and/or commit changes before merging tags." 
+		end
 
 	end
 
+	def delete(tags, options)
+
+		if options[:source]
+			source = options[:source]
+		else
+			source = Dir.pwd
+		end
+
+		stdin, stdout, stderr = Open3.popen3("git status -s")
+		r = stdout.read
+
+		if r == '' 
+			puts "Deleting tags #{tags.join(', ')} in: " + source
+
+			scanned = []
+			found = []
+			dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
+
+			# Scan for tags in the text of all files 
+			Dir.glob(dir) do |p|
+				f = File.open(p)
+				doc = f.read
+				
+				# YAML (with dirty check for YAML metadata header)
+				if doc[0..3] == "---\n"
+
+					contents = doc.split('---')[2].lstrip
+					meta = YAML.load(doc)
+
+					tags.each do |t|
+						meta['tags'].delete(t)
+					end
+
+					# strip potential double values
+					meta['tags'].uniq!
+
+					# new markdow file
+					doc = YAML.dump(meta) + "---\n" + contents
+
+				end
+
+				# Hashtags
+				tags.each { |t| doc.gsub!("##{t}", '')}
+
+				File.open(p, 'w') { |file| file.write(doc) }
+			end
+
+		else
+			puts "No clean git repository! Setup git and/or commit changes before deleting tags." 
+		end
+
+	end
 
 end
 
 
 class Tagh < Thor
-	desc "list [-s source]", "list tags."
-	option :sourcel, :aliases => "-s"
+	desc "list [arguments]", "List tags."
+	option :source, :aliases => "-s"
 	option :sublime, :aliases => "-u"
 	option :file, :aliases => "-f"
 	option :min
@@ -161,7 +236,7 @@ class Tagh < Thor
    		puts r.list(options)	
 	end
 
-	desc "find TAG [-s source]", "find items tagged TAG in [source]"
+	desc "find TAG [arguments]", "Find items tagged TAG in [source]"
 	option :source, :aliases => "-s"
 	option :file, :aliases => "-f"
 	option :open, :aliases => "-o"
@@ -170,11 +245,18 @@ class Tagh < Thor
    		puts r.find(tag, options)	
 	end
 
-	desc "merge TAGS", "merge all TAGS into the last one specified"
+	desc "merge TAGS [arguments]", "Merge all TAGS into the last one specified."
 	option :source, :aliases => "-s"
 	def merge(*tags)
 		r = Tagger.new
    		puts r.merge(tags, options)
+	end
+
+	desc "delete TAGS [arguments]", "Delete TAGS."
+	option :source, :aliases => "-s"
+	def delete(*tags)
+		r = Tagger.new
+   		puts r.delete(tags, options)
 	end
 end
 

@@ -1,35 +1,43 @@
-# Attention: tagh.rb is hardlinked to /usr/local/bin/tagh 
+##### Attention: tagh.rb is hardlinked to /usr/local/bin/tagh ######
 
-tagh is a commandline tool (based on thor) to handle tags in plain text files. There are three formats that need to be taken into accout: #hashtags, system tags (OpenMeta, Maverick), tags in YAML headers. tagh handles and converts all three formats.
+# Read Me
+
+*tagh* is a commandline tool to handle tags in plain text files. There are two formats tagh  processes: #hashtags and tags in YAML meta data headers.
+
+## Installation
+
+
+### Dependencies
+
 
 ## Commands
 
-### list [-s SOURCE] --occurrences >1
-lists tags in SOURCE
+### tagh list [arguments]
+List tags.
 
-### find TAG [-s SOURCE]
+*Arguments:*
+- source, -s:     The source folder. By default, the current directory is used.
+- sublime, -u:    Write a json file for sublime auto-completion.
+- file, -f:       Write output to file.
+- min:            Only list tags that occur min. times.
+- max:            Only list tags that occur max. times.
 
+### tagh find TAG [arguments]
+Find items tagged TAG.
 
-### merge TAG1 TAG2 NEWTAG [-s SOURCE]
-also works as change. 
+*Arguments:*
+source, -s:     The source folder. By default, the current directory is used.
+file, -f:       Write output to file.
+open, -o:       Open matched files in new Sublime Text window
 
+### tagh merge TAGS [arguments]
+Merge a list of TAGS into the last one specified. If only two TAGS are given, merge renames TAG1 as TAG2.
 
+*Arguments:*
+source, -s:     The source folder. By default, the current directory is used.
 
-### strip TAG1 TAG2 [-s SOURCE]: Strips TAG1, TAG2 
+### tagh delete TAG [arguments]
+Deletes TAGS from all files in the given directory.
 
-
-### collect -t system [-s SOURCE]: collects #hashtags and add them to YAML, system
-
-
-### move -f yaml -t system [-s SOURCE]: moves yaml tags to osx
-
-
-### copy -f yaml -t system [-s SOURCE]: copies yaml tags to osx
-
-
-### sync [-s SOURCE]: syncs yaml and osx system tags
-
-
-
-
-* Can be file or folder. Current folder by default; multiple -s possible
+*Arguments:*
+source, -s:     The source folder. By default, the current directory is used.
