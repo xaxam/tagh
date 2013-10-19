@@ -1,9 +1,8 @@
 #!/usr/bin/env ruby
 
+require 'rubygems'
 require 'open3'
 require 'open-uri'
-require 'rubygems'
-require 'terminal-notifier'
 require 'thor'
 require 'yaml'
 
