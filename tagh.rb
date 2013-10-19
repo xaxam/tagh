@@ -14,13 +14,21 @@ end
 
 class Tagger
 
-	def list(source, options)
+	def list(options)
 
+		if options[:source]
+			source = options[:source]
+		else
+			source = Dir.pwd
+		end
+
+		puts "Listing tags in: " + source
+		
 		scanned = []
 		tags = []
 		tagsn = []
 
-		dir = source + '*.{txt,md,mmd,markdown,taskpaper}'
+		dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
 
 		# Scan for hashtags in the text of all files
 		Dir.glob(dir) do |p|
@@ -56,11 +64,19 @@ class Tagger
 		end
 	end
 
-	def find(source, options)
+	def find(options)
+
+		if options[:source]
+			source = options[:source]
+		else
+			source = Dir.pwd
+		end
+
+		puts "Searching in: " + source
 
 		scanned = []
-
-		dir = source + '*.{txt,md,mmd,markdown,taskpaper}'
+		found = []
+		dir = source + '/*.{txt,md,mmd,markdown,taskpaper}'
 
 		# Scan for hashtags in the text of all files
 		Dir.glob(dir) do |p|
@@ -70,38 +86,46 @@ class Tagger
 				chunks.each do |chunk|
 					if chunk  =~ / ##{options[:tag]}[\s$]/ 
 						scanned << chunk + "\n\n[" + File.basename(p,File.extname(p))+ "](file://" + URI.escape(p) + ")"
+						found << ("'" + p + "'")
 					end
 				end
+		end
+
+		if options[:open]
+			founds = found.join(" ")
+			`subl -n #{founds}`
 		end
 		
 		if options[:file]
 			File.open(options[:file], 'w') { |file| file.puts scanned.join("\n\n---\n\n")}
 			puts "Result in file: " + options[:file]
 		else
-			#standard output
-			scanned.join("\n\n---\n\n")
+			founds = "- " + found.join("\n- ")
 		end 
+
 	end
 
 end
 
 
 class Tagh < Thor
-	desc "list [source]", "list all tags in [source]."
-	option :source
-	option :sublime, :aliases => "-s"
+	desc "list [-s source]", "list tags."
+	option :sourcel, :aliases => "-s"
+	option :sublime, :aliases => "-u"
 	option :file, :aliases => "-f"
-	def list(source)
+	def list()
 		r = Tagger.new
-   		puts r.list(source, options)	
+   		puts r.list(options)	
 	end
 
-	desc "find -t tag source", "find snippets tagged tag in 'source' (directory)"
+	desc "find -t tag [-s source]", "find snippets tagged tag in [source]"
+	option :source, :aliases => "-s"
 	option :tag, :aliases => "-t"
 	option :file, :aliases => "-f"
-	def find(source)
+	option :open, :aliases => "-o"
+	def find()
 		r = Tagger.new
-   		puts r.find(source, options)	
+   		puts r.find(options)	
 	end
 end
 
