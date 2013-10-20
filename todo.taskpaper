@@ -1,3 +1,6 @@
+##### Attention: tagh.rb is hardlinked to /usr/local/bin/tagh ######
+
+
 Inbox:
 	- implement merge, delete @done(2013-10-19)
 	- Make diffrences betwee hashtags and normal tags transparent: #my_hash_tag == my hash tag
