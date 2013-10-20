@@ -1,7 +1,7 @@
 # TAGH
 Version 1.0.0
 
-*tagh* is a simple commandline tool to work with tags in plain text (markdown) files. There are two formats *tagh* can currently process: #hashtags and tags in YAML meta data headers.
+*tagh* is a command line tool to work with tags in plain text (markdown) files. There are two formats *tagh* can currently process: #hashtags and tags in YAML meta data headers.
 
 ## Installation
 *tagh* is a simple ruby script that depends on thor. Install the thor gem is you do not already have it:
