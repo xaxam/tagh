@@ -10,7 +10,7 @@ Version 1.0.0
 
 Put the *tagh*-folder anywhere, and create a symbolic link in /usr/local/bin: open the terminal, navigate to the *tagh*-folder, and run:
 
-    ln -s thag.rb /usr/local/bin/tagh
+    ln -s tagh.rb /usr/local/bin/tagh
 
 That’s it. Type `tagh` in your terminal and you should be presented with a summary of the commands. Tested under Mac OSX 10.7 and Ruby 1.9 and nowhere else...
 
