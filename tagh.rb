@@ -43,8 +43,12 @@ class Tagger
 					scanned << f.read.scan(/( #[\w\d-]+)(?=\s|$)/i)
 
 					# YAML meta data tags
-					yaml = YAML.load_file(p)
-					scanned << yaml['tags'] unless yaml['tags'] == nil
+					begin
+						yaml = YAML.load_file(p)
+						scanned << yaml['tags'] unless yaml['tags'] == nil
+					rescue StandardError
+						puts p + ': ' + StandardError
+					end
 
 			end		
 
