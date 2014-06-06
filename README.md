@@ -1,5 +1,5 @@
 # TAGH
-Version 1.0.0
+Version 1.0.1
 
 *Tagh* is a command-line tool to work with tags in plain text (markdown) files. There are two formats *tagh* currently processs Twitter-style #hashtags in collections of text documents.
 
@@ -66,3 +66,8 @@ Plain text documents written in markdown are at the core of my note-taking, rese
 
 ---
 [^1]: A section is defined as a text delimited by a heading, a horizontal rule, or the beginning/end of the document.
+
+## Version history
+
+1.0.0 intitial release
+1.0.1 temporarily suspended YAML handling due to inconsistent results
