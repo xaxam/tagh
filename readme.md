@@ -1,7 +1,7 @@
 # TAGH
 Version 1.0.0
 
-*Tagh* is a command-line tool to work with tags in plain text (markdown) files. There are two formats *tagh* can currently process: #hashtags and tags in YAML meta data headers.
+*Tagh* is a command-line tool to work with tags in plain text (markdown) files. There are two formats *tagh* currently processs Twitter-style #hashtags in collections of text documents.
 
 ## Installation
 *Tagh* is a simple ruby script that depends on thor. Install the thor gem is you do not already have it:
@@ -62,7 +62,7 @@ Deletes TAGS from all files in the given directory. Example:
 
 
 ## Purpose
-Plain text documents written in markdown are at the core of my note-taking, research, writing, and publishing workflows. I use Twitter-style #hashtags to tag sections[^1] in longer markdown documents (transcripts, field notes, etc.) and YAML metadata headers for tags that refer to entire documents, for example blog posts or short notes. The purpose of *tagh* is to make it easier to handle and manipulate these tag sets in collections of documents.
+Plain text documents written in markdown are at the core of my note-taking, research, writing, and publishing workflows. I use Twitter-style #hashtags to tag sections[^1] in longer markdown documents (transcripts, field notes, etc.) The purpose of *tagh* is to make it easier to handle and manipulate these tag sets in collections of documents.
 
 ---
 [^1]: A section is defined as a text delimited by a heading, a horizontal rule, or the beginning/end of the document.
