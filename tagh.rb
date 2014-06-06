@@ -6,10 +6,8 @@ require 'open-uri'
 require 'thor'
 require 'yaml'
 
-if RUBY_VERSION =~ /1.9/
-  Encoding.default_external = Encoding::UTF_8
-  Encoding.default_internal = Encoding::UTF_8
-end
+Encoding.default_external = Encoding::UTF_8
+Encoding.default_internal = Encoding::UTF_8
 
 
 class Tagger
@@ -43,12 +41,12 @@ class Tagger
 					scanned << f.read.scan(/( #[\w\d-]+)(?=\s|$)/i)
 
 					# YAML meta data tags
-					begin
-						yaml = YAML.load_file(p)
-						scanned << yaml['tags'] unless yaml['tags'] == nil
-					rescue StandardError
-						puts p + ': ' + StandardError
-					end
+					# begin
+					# 	yaml = YAML.load_file(p)
+					# 	scanned << yaml['tags'] unless yaml['tags'] == nil
+					# rescue StandardError
+					# 	puts p + ': ' + StandardError
+					# end
 
 			end		
 
@@ -119,13 +117,13 @@ class Tagger
 				end
 
 				# YAML meta data tags
-				yaml = YAML.load_file(p)
-				if yaml['tags']
-					if yaml['tags'].include? tag
-						scanned << f.read
-						found << ("'" + p + "'")
-					end
-				end
+				# yaml = YAML.load_file(p)
+				# if yaml['tags']
+				# 	if yaml['tags'].include? tag
+				# 		scanned << f.read
+				# 		found << ("'" + p + "'")
+				# 	end
+				# end
 			end
 		end
 
@@ -233,22 +231,22 @@ class Tagger
 					doc = f.read
 					
 					# YAML (with dirty check for YAML metadata header)
-					if doc[0..3] == "---\n"
+					# if doc[0..3] == "---\n"
 
-						contents = doc.split('---')[2].lstrip
-						meta = YAML.load(doc)
+					# 	contents = doc.split('---')[2].lstrip
+					# 	meta = YAML.load(doc)
 
-						tags.each do |t|
-							meta['tags'].delete(t)
-						end
+					# 	tags.each do |t|
+					# 		meta['tags'].delete(t)
+					# 	end
 
-						# strip potential double values
-						meta['tags'].uniq!
+					# 	# strip potential double values
+					# 	meta['tags'].uniq!
 
-						# new markdow file
-						doc = YAML.dump(meta) + "---\n" + contents
+					# 	# new markdow file
+					# 	doc = YAML.dump(meta) + "---\n" + contents
 
-					end
+					# end
 
 					# Hashtags
 					tags.each { |t| doc.gsub!("##{t}", '')}
@@ -304,5 +302,3 @@ class Tagh < Thor
 end
 
 Tagh.start(ARGV)
-
-
